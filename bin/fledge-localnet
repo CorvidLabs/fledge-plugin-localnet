@@ -17,8 +17,7 @@ recv() {
 
 json_obj() { jq -cn "$@"; }
 
-send_output() { send "$(json_obj --arg t "$1
-" '{type:"output",text:$t}')"; }
+send_output() { send "$(json_obj --arg t "$1" '{type:"output",text:$t}')"; }
 send_log() { send "$(json_obj --arg l "$1" --arg m "$2" '{type:"log",level:$l,message:$m}')"; }
 send_error() { send_log "error" "$1"; }
 send_progress() { send "$(json_obj --arg m "$1" '{type:"progress",message:$m}')"; }
@@ -214,8 +213,12 @@ cmd_fund() {
   check_algokit
   check_docker
 
+  # `algokit goal` resolves the active localnet container regardless of name
+  # (current AlgoKit names it `algokit_sandbox_algod`, older releases used
+  # `algokit_algod`). The dispenser is the highest-balance account; we sort
+  # numerically descending on the microAlgos column and take the first row.
   local result
-  result=$(send_exec "fund" "docker exec algokit_algod goal clerk send -a '$amount' -f \$(docker exec algokit_algod goal account list | head -1 | awk '{print \$2}') -t '$address'")
+  result=$(send_exec "fund" "algokit goal clerk send -a '$amount' -f \$(algokit goal account list 2>/dev/null | awk '{print \$3, \$4}' | sort -k2 -n -r | head -1 | awk '{print \$1}') -t '$address'")
   local exit_code
   exit_code=$(resp_code "$result")
 
@@ -239,8 +242,9 @@ cmd_accounts() {
   check_algokit
   check_docker
 
+  # `algokit goal` finds the active localnet container regardless of its name.
   local result
-  result=$(send_exec "accounts" "docker exec algokit_algod goal account list")
+  result=$(send_exec "accounts" "algokit goal account list 2>/dev/null")
   local exit_code
   exit_code=$(resp_code "$result")
 
