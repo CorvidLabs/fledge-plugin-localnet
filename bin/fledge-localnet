@@ -189,6 +189,11 @@ cmd_fund() {
     exit 1
   fi
 
+  if ! [[ "$address" =~ ^[A-Z2-7]{58}$ ]]; then
+    send_error "Invalid Algorand address: must be 58 uppercase base32 characters"
+    exit 1
+  fi
+
   local amount="10000000"
   local i=2
   while [ $i -lt ${#ARGV[@]} ]; do
@@ -201,11 +206,16 @@ cmd_fund() {
     i=$((i + 1))
   done
 
+  if ! [[ "$amount" =~ ^[0-9]+$ ]]; then
+    send_error "Invalid amount: must be a positive integer (microalgos)"
+    exit 1
+  fi
+
   check_algokit
   check_docker
 
   local result
-  result=$(send_exec "fund" "docker exec algokit_algod goal clerk send -a $amount -f \$(docker exec algokit_algod goal account list | head -1 | awk '{print \$2}') -t $address")
+  result=$(send_exec "fund" "docker exec algokit_algod goal clerk send -a '$amount' -f \$(docker exec algokit_algod goal account list | head -1 | awk '{print \$2}') -t '$address'")
   local exit_code
   exit_code=$(resp_code "$result")
 
