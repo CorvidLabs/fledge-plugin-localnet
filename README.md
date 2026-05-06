@@ -1,6 +1,6 @@
 # fledge-plugin-localnet
 
-Algorand localnet lifecycle plugin for [fledge](https://github.com/CorvidLabs/fledge).
+Algorand localnet lifecycle plugin for [fledge](https://github.com/CorvidLabs/fledge). Start, stop, reset, and manage a local Algorand network for development.
 
 ## Install
 
@@ -10,23 +10,48 @@ fledge plugins install CorvidLabs/fledge-plugin-localnet
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `fledge localnet start` | Start Algorand localnet |
-| `fledge localnet stop` | Stop localnet |
-| `fledge localnet reset` | Reset localnet to genesis |
-| `fledge localnet status` | Show running state and ports |
-| `fledge localnet fund <address>` | Dispense Algos from faucet |
-| `fledge localnet accounts` | List accounts with balances |
+### `fledge localnet start`
 
-## Data Persistence
+Start the Algorand localnet via AlgoKit and Docker.
 
-Localnet state is managed by AlgoKit and Docker. Running `fledge localnet reset` wipes all chain data (accounts, transactions, ASAs). Reinstalling this plugin has no effect on localnet state.
+```
+$ fledge localnet start
+Starting localnet...
+Localnet is running.
+```
 
-## Security
+### `fledge localnet stop`
 
-- The `fund` command validates Algorand addresses (58-char base32) and amounts (positive integers) before execution.
-- All values are single-quoted in shell commands to prevent injection.
+Stop the running localnet. Chain state is preserved for next start.
+
+### `fledge localnet reset`
+
+Reset localnet to genesis. **Warning:** This wipes all chain data — accounts, transactions, ASAs.
+
+### `fledge localnet status`
+
+Show whether localnet is running and which ports are active.
+
+```
+$ fledge localnet status
+Localnet: running
+  algod:   http://localhost:4001
+  indexer: http://localhost:8980
+  KMD:     http://localhost:4002
+```
+
+### `fledge localnet fund <address> [amount]`
+
+Dispense Algos from the localnet faucet to an address. Default amount: 10 ALGO.
+
+```
+$ fledge localnet fund PZZCVTTZN4VUV6PPGKZ73GKYNXDHPZAYHN6BETWZPD4JSLB7WHMGZLQGRE
+Funded PZZCVTTZ... with 10000000 microAlgos
+```
+
+### `fledge localnet accounts`
+
+List all localnet accounts with their balances.
 
 ## Exposing Localnet to Remote Agents (socat)
 
@@ -40,7 +65,20 @@ socat TCP-LISTEN:4002,fork,reuseaddr,bind=0.0.0.0 TCP:localhost:4002 &
 
 The remote agent's algochat/memory plugins then connect via `ALGOD_URL`, `INDEXER_URL`, and `KMD_URL` env vars pointing to this host.
 
+## Data Persistence
+
+Localnet state is managed by AlgoKit and Docker. Running `fledge localnet reset` wipes all chain data (accounts, transactions, ASAs). Reinstalling this plugin has no effect on localnet state.
+
+## Security
+
+- The `fund` command validates Algorand addresses (58-char base32) and amounts (positive integers) before execution.
+- All values are single-quoted in shell commands to prevent injection.
+
 ## Prerequisites
 
-- `algokit` on PATH
+- [AlgoKit](https://github.com/algorandfoundation/algokit-cli) on PATH
 - Docker running
+
+## License
+
+MIT
