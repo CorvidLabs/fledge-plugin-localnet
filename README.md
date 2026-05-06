@@ -28,6 +28,18 @@ Localnet state is managed by AlgoKit and Docker. Running `fledge localnet reset`
 - The `fund` command validates Algorand addresses (58-char base32) and amounts (positive integers) before execution.
 - All values are single-quoted in shell commands to prevent injection.
 
+## Exposing Localnet to Remote Agents (socat)
+
+If a remote agent (e.g., corvid-agent in a sandbox) needs to reach this localnet, bridge the ports with socat on the host:
+
+```bash
+socat TCP-LISTEN:4001,fork,reuseaddr,bind=0.0.0.0 TCP:localhost:4001 &
+socat TCP-LISTEN:8980,fork,reuseaddr,bind=0.0.0.0 TCP:localhost:8980 &
+socat TCP-LISTEN:4002,fork,reuseaddr,bind=0.0.0.0 TCP:localhost:4002 &
+```
+
+The remote agent's algochat/memory plugins then connect via `ALGOD_URL`, `INDEXER_URL`, and `KMD_URL` env vars pointing to this host.
+
 ## Prerequisites
 
 - `algokit` on PATH
