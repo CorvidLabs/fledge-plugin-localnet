@@ -55,6 +55,14 @@ done <<< "$ARGS"
 
 SUBCMD="${ARGV[0]:-help}"
 
+# Check for --json flag
+JSON_OUTPUT=false
+for arg in "${ARGV[@]}"; do
+  [ "$arg" = "--json" ] && JSON_OUTPUT=true
+done
+
+send_json() { send "$(printf '%s' "$1" | jq -Rsc '{type:"output",text:.}')"; }
+
 # --- Helper: check prerequisites ---
 
 check_algokit() {
@@ -95,7 +103,11 @@ cmd_start() {
     send_error "Failed to start localnet: $stderr"
     exit 1
   fi
-  send_output "Localnet started. algod: localhost:4001, KMD: localhost:4002, indexer: localhost:8980"
+  if [ "$JSON_OUTPUT" = true ]; then
+    send_json '{"ok":true,"action":"start","algod":"localhost:4001","kmd":"localhost:4002","indexer":"localhost:8980"}'
+  else
+    send_output "Localnet started. algod: localhost:4001, KMD: localhost:4002, indexer: localhost:8980"
+  fi
 }
 
 cmd_stop() {
@@ -110,7 +122,11 @@ cmd_stop() {
     send_error "Failed to stop localnet: $stderr"
     exit 1
   fi
-  send_output "Localnet stopped."
+  if [ "$JSON_OUTPUT" = true ]; then
+    send_json '{"ok":true,"action":"stop"}'
+  else
+    send_output "Localnet stopped."
+  fi
 }
 
 cmd_reset() {
@@ -145,16 +161,24 @@ cmd_status() {
   containers=$(resp_stdout "$docker_check")
 
   if [ -z "$(printf '%s' "$containers" | tr -d '[:space:]')" ]; then
-    send_output "Status: stopped"
-    send_output "Run: fledge localnet start"
+    if [ "$JSON_OUTPUT" = true ]; then
+      send_json '{"status":"stopped","running":false}'
+    else
+      send_output "Status: stopped"
+      send_output "Run: fledge localnet start"
+    fi
   else
-    send_output "Status: running"
-    send_output ""
-    send "$(printf '%s' "$containers" | jq -Rsc '{type:"output",text:.}')"
-    send_output ""
-    send_output "algod:   localhost:4001"
-    send_output "KMD:     localhost:4002"
-    send_output "Indexer: localhost:8980"
+    if [ "$JSON_OUTPUT" = true ]; then
+      send_json '{"status":"running","running":true,"algod":"localhost:4001","kmd":"localhost:4002","indexer":"localhost:8980"}'
+    else
+      send_output "Status: running"
+      send_output ""
+      send "$(printf '%s' "$containers" | jq -Rsc '{type:"output",text:.}')"
+      send_output ""
+      send_output "algod:   localhost:4001"
+      send_output "KMD:     localhost:4002"
+      send_output "Indexer: localhost:8980"
+    fi
   fi
 }
 
@@ -194,7 +218,11 @@ cmd_fund() {
 
   local algo_amount
   algo_amount=$(echo "scale=6; $amount / 1000000" | bc)
-  send_output "Funded $address with $algo_amount ALGO"
+  if [ "$JSON_OUTPUT" = true ]; then
+    send_json "$(json_obj --arg a "$address" --arg amt "$algo_amount" --arg micro "$amount" '{ok:true,address:$a,algo:$amt,microalgos:($micro|tonumber)}')"
+  else
+    send_output "Funded $address with $algo_amount ALGO"
+  fi
 }
 
 cmd_accounts() {
@@ -224,12 +252,14 @@ cmd_help() {
   send_output "fledge-plugin-localnet — Algorand localnet lifecycle"
   send_output ""
   send_output "Commands:"
-  send_output "  start                        Start localnet"
-  send_output "  stop                         Stop localnet"
+  send_output "  start [--json]               Start localnet"
+  send_output "  stop [--json]                Stop localnet"
   send_output "  reset                        Reset to genesis"
-  send_output "  status                       Show running state"
-  send_output "  fund <addr> [--amount N]     Dispense Algos"
+  send_output "  status [--json]              Show running state"
+  send_output "  fund <addr> [--amount N] [--json]  Dispense Algos"
   send_output "  accounts                     List accounts"
+  send_output ""
+  send_output "Use --json for machine-readable output."
 }
 
 case "$SUBCMD" in
