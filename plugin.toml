@@ -1,0 +1,19 @@
+[plugin]
+name = "fledge-plugin-localnet"
+version = "0.1.0"
+description = "Algorand localnet lifecycle — start, stop, reset, status, fund, accounts"
+author = "CorvidLabs"
+protocol = "fledge-v1"
+
+[[commands]]
+name = "localnet"
+description = "Algorand localnet management"
+binary = "bin/fledge-localnet"
+
+[hooks]
+post_work_start = "hooks/post-work-start.sh"
+
+[capabilities]
+exec = true
+store = false
+metadata = true

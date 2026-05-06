@@ -1,0 +1,5 @@
+[registry]
+name = "fledge-plugin-localnet"
+
+[specs]
+localnet = "specs/localnet/localnet.spec.md"

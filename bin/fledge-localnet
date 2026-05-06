@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --- fledge-v1 protocol helpers ---
+
+send() { printf '%s\n' "$1"; }
+
+recv() {
+  local line
+  IFS= read -r line
+  printf '%s\n' "$line"
+}
+
+send_output() { send "{\"type\":\"output\",\"text\":\"$1\\n\"}"; }
+send_log() { send "{\"type\":\"log\",\"level\":\"$1\",\"message\":\"$2\"}"; }
+send_error() { send_log "error" "$1"; }
+send_progress() { send "{\"type\":\"progress\",\"message\":\"$1\"}"; }
+
+send_exec() {
+  local id="$1" cmd="$2"
+  send "{\"type\":\"exec\",\"id\":\"$id\",\"command\":\"$cmd\"}"
+  recv
+}
+
+send_confirm() {
+  local id="$1" message="$2"
+  send "{\"type\":\"confirm\",\"id\":\"$id\",\"message\":\"$message\"}"
+  recv
+}
+
+# --- Parse init message ---
+
+INIT=$(recv)
+ARGS=$(printf '%s' "$INIT" | jq -r '.args // [] | .[]' 2>/dev/null)
+PROJECT_ROOT=$(printf '%s' "$INIT" | jq -r '.project.root // "."' 2>/dev/null)
+
+declare -a ARGV=()
+while IFS= read -r arg; do
+  [ -n "$arg" ] && ARGV+=("$arg")
+done <<< "$ARGS"
+
+SUBCMD="${ARGV[0]:-help}"
+
+# --- Helper: check prerequisites ---
+
+check_algokit() {
+  local result
+  result=$(send_exec "check-algokit" "which algokit")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 1' 2>/dev/null)
+  if [ "$exit_code" != "0" ]; then
+    send_error "algokit not found. Install: https://github.com/algorandfoundation/algokit-cli"
+    exit 1
+  fi
+}
+
+check_docker() {
+  local result
+  result=$(send_exec "check-docker" "docker info > /dev/null 2>&1 && echo ok || echo fail")
+  local stdout
+  stdout=$(printf '%s' "$result" | jq -r '.stdout // ""' 2>/dev/null | tr -d '[:space:]')
+  if [ "$stdout" != "ok" ]; then
+    send_error "Docker must be running for localnet"
+    exit 1
+  fi
+}
+
+# --- Subcommands ---
+
+cmd_start() {
+  check_algokit
+  check_docker
+  send_progress "Starting Algorand localnet..."
+  local result
+  result=$(send_exec "start" "algokit localnet start")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  if [ "$exit_code" != "0" ]; then
+    local stderr
+    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    send_error "Failed to start localnet: $stderr"
+    exit 1
+  fi
+  send_output "Localnet started. algod: localhost:4001, KMD: localhost:4002, indexer: localhost:8980"
+}
+
+cmd_stop() {
+  check_algokit
+  local result
+  result=$(send_exec "stop" "algokit localnet stop")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  if [ "$exit_code" != "0" ]; then
+    local stderr
+    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    send_error "Failed to stop localnet: $stderr"
+    exit 1
+  fi
+  send_output "Localnet stopped."
+}
+
+cmd_reset() {
+  check_algokit
+  local resp
+  resp=$(send_confirm "confirm-reset" "Are you sure? This will destroy all localnet state.")
+  local confirmed
+  confirmed=$(printf '%s' "$resp" | jq -r '.value // false' 2>/dev/null)
+  if [ "$confirmed" != "true" ]; then
+    send_output "Cancelled."
+    exit 0
+  fi
+  send_progress "Resetting localnet..."
+  local result
+  result=$(send_exec "reset" "algokit localnet reset")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  if [ "$exit_code" != "0" ]; then
+    local stderr
+    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    send_error "Failed to reset localnet: $stderr"
+    exit 1
+  fi
+  send_output "Localnet reset to genesis."
+}
+
+cmd_status() {
+  check_algokit
+  local docker_check
+  docker_check=$(send_exec "docker-ps" "docker ps --filter name=algokit --format '{{.Names}}: {{.Status}}' 2>/dev/null")
+  local containers
+  containers=$(printf '%s' "$docker_check" | jq -r '.stdout // ""' 2>/dev/null | tr -d '[:space:]')
+
+  if [ -z "$containers" ]; then
+    send_output "Status: stopped"
+    send_output "Run: fledge localnet start"
+  else
+    send_output "Status: running"
+    send_output "algod:   localhost:4001"
+    send_output "KMD:     localhost:4002"
+    send_output "Indexer: localhost:8980"
+  fi
+}
+
+cmd_fund() {
+  local address="${ARGV[1]:-}"
+  if [ -z "$address" ]; then
+    send_error "Usage: fledge localnet fund <address> [--amount <microalgos>]"
+    exit 1
+  fi
+
+  local amount="10000000"
+  local i=2
+  while [ $i -lt ${#ARGV[@]} ]; do
+    case "${ARGV[$i]}" in
+      --amount)
+        i=$((i + 1))
+        amount="${ARGV[$i]:-10000000}"
+        ;;
+    esac
+    i=$((i + 1))
+  done
+
+  check_algokit
+  check_docker
+
+  local result
+  result=$(send_exec "fund" "docker exec algokit_algod goal clerk send -a $amount -f \$(docker exec algokit_algod goal account list | head -1 | awk '{print \$2}') -t $address")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+
+  if [ "$exit_code" != "0" ]; then
+    local stderr
+    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    send_error "Failed to fund account: $stderr"
+    exit 1
+  fi
+
+  local algo_amount
+  algo_amount=$(echo "scale=6; $amount / 1000000" | bc)
+  send_output "Funded $address with $algo_amount ALGO"
+}
+
+cmd_accounts() {
+  check_algokit
+  check_docker
+
+  local result
+  result=$(send_exec "accounts" "docker exec algokit_algod goal account list")
+  local exit_code
+  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+
+  if [ "$exit_code" != "0" ]; then
+    send_error "Localnet is not running. Run: fledge localnet start"
+    exit 1
+  fi
+
+  local stdout
+  stdout=$(printf '%s' "$result" | jq -r '.stdout // ""' 2>/dev/null)
+  if [ -n "$stdout" ]; then
+    local escaped
+    escaped=$(printf '%s' "$stdout" | jq -Rs '.')
+    send "{\"type\":\"output\",\"text\":$escaped}"
+  else
+    send_output "(no accounts found)"
+  fi
+}
+
+cmd_help() {
+  send_output "fledge-plugin-localnet — Algorand localnet lifecycle"
+  send_output ""
+  send_output "Commands:"
+  send_output "  start                        Start localnet"
+  send_output "  stop                         Stop localnet"
+  send_output "  reset                        Reset to genesis"
+  send_output "  status                       Show running state"
+  send_output "  fund <addr> [--amount N]     Dispense Algos"
+  send_output "  accounts                     List accounts"
+}
+
+case "$SUBCMD" in
+  start)    cmd_start ;;
+  stop)     cmd_stop ;;
+  reset)    cmd_reset ;;
+  status)   cmd_status ;;
+  fund)     cmd_fund ;;
+  accounts) cmd_accounts ;;
+  help|--help|-h) cmd_help ;;
+  *)
+    send_error "Unknown command: $SUBCMD. Run: fledge localnet help"
+    exit 1
+    ;;
+esac
