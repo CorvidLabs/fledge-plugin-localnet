@@ -142,13 +142,16 @@ cmd_status() {
   local docker_check
   docker_check=$(send_exec "docker-ps" "docker ps --filter name=algokit --format '{{.Names}}: {{.Status}}' 2>/dev/null")
   local containers
-  containers=$(resp_stdout "$docker_check" | tr -d '[:space:]')
+  containers=$(resp_stdout "$docker_check")
 
-  if [ -z "$containers" ]; then
+  if [ -z "$(printf '%s' "$containers" | tr -d '[:space:]')" ]; then
     send_output "Status: stopped"
     send_output "Run: fledge localnet start"
   else
     send_output "Status: running"
+    send_output ""
+    send "$(printf '%s' "$containers" | jq -Rsc '{type:"output",text:.}')"
+    send_output ""
     send_output "algod:   localhost:4001"
     send_output "KMD:     localhost:4002"
     send_output "Indexer: localhost:8980"
