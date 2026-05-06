@@ -28,6 +28,13 @@ send_confirm() {
   recv
 }
 
+# --- Response parsing helpers ---
+
+resp_stdout() { printf '%s' "$1" | jq -r '.value.stdout // ""' 2>/dev/null; }
+resp_stderr() { printf '%s' "$1" | jq -r '.value.stderr // ""' 2>/dev/null; }
+resp_code() { printf '%s' "$1" | jq -r '.value.code // 0' 2>/dev/null; }
+resp_value() { printf '%s' "$1" | jq -r '.value // empty' 2>/dev/null; }
+
 # --- Parse init message ---
 
 INIT=$(recv)
@@ -47,7 +54,7 @@ check_algokit() {
   local result
   result=$(send_exec "check-algokit" "which algokit")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 1' 2>/dev/null)
+  exit_code=$(resp_code "$result")
   if [ "$exit_code" != "0" ]; then
     send_error "algokit not found. Install: https://github.com/algorandfoundation/algokit-cli"
     exit 1
@@ -58,7 +65,7 @@ check_docker() {
   local result
   result=$(send_exec "check-docker" "docker info > /dev/null 2>&1 && echo ok || echo fail")
   local stdout
-  stdout=$(printf '%s' "$result" | jq -r '.stdout // ""' 2>/dev/null | tr -d '[:space:]')
+  stdout=$(resp_stdout "$result" | tr -d '[:space:]')
   if [ "$stdout" != "ok" ]; then
     send_error "Docker must be running for localnet"
     exit 1
@@ -74,10 +81,10 @@ cmd_start() {
   local result
   result=$(send_exec "start" "algokit localnet start")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  exit_code=$(resp_code "$result")
   if [ "$exit_code" != "0" ]; then
     local stderr
-    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    stderr=$(resp_stderr "$result")
     send_error "Failed to start localnet: $stderr"
     exit 1
   fi
@@ -89,10 +96,10 @@ cmd_stop() {
   local result
   result=$(send_exec "stop" "algokit localnet stop")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  exit_code=$(resp_code "$result")
   if [ "$exit_code" != "0" ]; then
     local stderr
-    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    stderr=$(resp_stderr "$result")
     send_error "Failed to stop localnet: $stderr"
     exit 1
   fi
@@ -104,7 +111,7 @@ cmd_reset() {
   local resp
   resp=$(send_confirm "confirm-reset" "Are you sure? This will destroy all localnet state.")
   local confirmed
-  confirmed=$(printf '%s' "$resp" | jq -r '.value // false' 2>/dev/null)
+  confirmed=$(resp_value "$resp")
   if [ "$confirmed" != "true" ]; then
     send_output "Cancelled."
     exit 0
@@ -113,10 +120,10 @@ cmd_reset() {
   local result
   result=$(send_exec "reset" "algokit localnet reset")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  exit_code=$(resp_code "$result")
   if [ "$exit_code" != "0" ]; then
     local stderr
-    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    stderr=$(resp_stderr "$result")
     send_error "Failed to reset localnet: $stderr"
     exit 1
   fi
@@ -128,7 +135,7 @@ cmd_status() {
   local docker_check
   docker_check=$(send_exec "docker-ps" "docker ps --filter name=algokit --format '{{.Names}}: {{.Status}}' 2>/dev/null")
   local containers
-  containers=$(printf '%s' "$docker_check" | jq -r '.stdout // ""' 2>/dev/null | tr -d '[:space:]')
+  containers=$(resp_stdout "$docker_check" | tr -d '[:space:]')
 
   if [ -z "$containers" ]; then
     send_output "Status: stopped"
@@ -166,11 +173,11 @@ cmd_fund() {
   local result
   result=$(send_exec "fund" "docker exec algokit_algod goal clerk send -a $amount -f \$(docker exec algokit_algod goal account list | head -1 | awk '{print \$2}') -t $address")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  exit_code=$(resp_code "$result")
 
   if [ "$exit_code" != "0" ]; then
     local stderr
-    stderr=$(printf '%s' "$result" | jq -r '.stderr // "unknown error"' 2>/dev/null)
+    stderr=$(resp_stderr "$result")
     send_error "Failed to fund account: $stderr"
     exit 1
   fi
@@ -187,7 +194,7 @@ cmd_accounts() {
   local result
   result=$(send_exec "accounts" "docker exec algokit_algod goal account list")
   local exit_code
-  exit_code=$(printf '%s' "$result" | jq -r '.exit_code // 0' 2>/dev/null)
+  exit_code=$(resp_code "$result")
 
   if [ "$exit_code" != "0" ]; then
     send_error "Localnet is not running. Run: fledge localnet start"
@@ -195,7 +202,7 @@ cmd_accounts() {
   fi
 
   local stdout
-  stdout=$(printf '%s' "$result" | jq -r '.stdout // ""' 2>/dev/null)
+  stdout=$(resp_stdout "$result")
   if [ -n "$stdout" ]; then
     local escaped
     escaped=$(printf '%s' "$stdout" | jq -Rs '.')
