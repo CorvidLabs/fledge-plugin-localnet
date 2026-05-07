@@ -40,13 +40,16 @@ Localnet: running
   KMD:     http://localhost:4002
 ```
 
-### `fledge localnet fund <address> [amount]`
+### `fledge localnet fund <address> [--amount <microalgos>]`
 
-Dispense Algos from the localnet faucet to an address. Default amount: 10 ALGO.
+Dispense Algos from the localnet faucet to an address. Default amount: 10,000,000 microAlgos (10 ALGO).
 
 ```
 $ fledge localnet fund PZZCVTTZN4VUV6PPGKZ73GKYNXDHPZAYHN6BETWZPD4JSLB7WHMGZLQGRE
-Funded PZZCVTTZ... with 10000000 microAlgos
+Funded PZZCVTTZ... with 10 ALGO
+
+$ fledge localnet fund PZZCVTTZN4VUV6PPGKZ73GKYNXDHPZAYHN6BETWZPD4JSLB7WHMGZLQGRE --amount 5000000
+Funded PZZCVTTZ... with 5 ALGO
 ```
 
 ### `fledge localnet accounts`
@@ -78,6 +81,7 @@ Localnet state is managed by AlgoKit and Docker. Running `fledge localnet reset`
 
 - [AlgoKit](https://github.com/algorandfoundation/algokit-cli) on PATH
 - Docker running
+- `jq` and `bc` on PATH
 
 ## License
 
