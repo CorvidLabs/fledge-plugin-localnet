@@ -26,7 +26,7 @@ Stop the running localnet. Chain state is preserved for next start.
 
 ### `fledge localnet reset`
 
-Reset localnet to genesis. **Warning:** This wipes all chain data — accounts, transactions, ASAs.
+Reset localnet to genesis. **Warning:** This wipes all chain data including accounts, transactions, and ASAs.
 
 ### `fledge localnet status`
 
