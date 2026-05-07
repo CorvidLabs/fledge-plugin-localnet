@@ -44,7 +44,7 @@ resp_value() { printf '%s' "$1" | jq -r '.value // empty' 2>/dev/null; }
 # --- Parse init message ---
 
 INIT=$(recv)
-INIT_VERSION=$(printf '%s' "$INIT" | jq -r '.version // ""' 2>/dev/null)
+INIT_VERSION=$(printf '%s' "$INIT" | jq -r '.protocol // ""' 2>/dev/null)
 if [ "$INIT_VERSION" != "fledge-v1" ]; then
   send_error "Unsupported protocol version: '$INIT_VERSION' (expected 'fledge-v1')"
   exit 1
