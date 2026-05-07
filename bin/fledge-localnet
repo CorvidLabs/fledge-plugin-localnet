@@ -44,6 +44,11 @@ resp_value() { printf '%s' "$1" | jq -r '.value // empty' 2>/dev/null; }
 # --- Parse init message ---
 
 INIT=$(recv)
+INIT_VERSION=$(printf '%s' "$INIT" | jq -r '.version // ""' 2>/dev/null)
+if [ "$INIT_VERSION" != "fledge-v1" ]; then
+  send_error "Unsupported protocol version: '$INIT_VERSION' (expected 'fledge-v1')"
+  exit 1
+fi
 ARGS=$(printf '%s' "$INIT" | jq -r '.args // [] | .[]' 2>/dev/null)
 PROJECT_ROOT=$(printf '%s' "$INIT" | jq -r '.project.root // "."' 2>/dev/null)
 
@@ -149,7 +154,11 @@ cmd_reset() {
     send_error "Failed to reset localnet: $stderr"
     exit 1
   fi
-  send_output "Localnet reset to genesis."
+  if [ "$JSON_OUTPUT" = true ]; then
+    send_json '{"ok":true,"action":"reset"}'
+  else
+    send_output "Localnet reset to genesis."
+  fi
 }
 
 cmd_status() {
@@ -198,8 +207,12 @@ cmd_fund() {
   while [ $i -lt ${#ARGV[@]} ]; do
     case "${ARGV[$i]}" in
       --amount)
+        if [ $((i + 1)) -ge ${#ARGV[@]} ]; then
+          send_error "--amount requires a value"
+          exit 1
+        fi
         i=$((i + 1))
-        amount="${ARGV[$i]:-10000000}"
+        amount="${ARGV[$i]}"
         ;;
     esac
     i=$((i + 1))
@@ -207,6 +220,17 @@ cmd_fund() {
 
   if ! [[ "$amount" =~ ^[0-9]+$ ]]; then
     send_error "Invalid amount: must be a positive integer (microalgos)"
+    exit 1
+  fi
+
+  if [ "$amount" = "0" ]; then
+    send_error "Invalid amount: must be greater than zero"
+    exit 1
+  fi
+
+  # uint64 max: 18446744073709551615
+  if [ ${#amount} -gt 20 ] || { [ ${#amount} -eq 20 ] && [[ "$amount" > "18446744073709551615" ]]; }; then
+    send_error "Invalid amount: exceeds uint64 max (18446744073709551615)"
     exit 1
   fi
 
@@ -256,9 +280,32 @@ cmd_accounts() {
   local stdout
   stdout=$(resp_stdout "$result")
   if [ -n "$stdout" ]; then
-    send "$(printf '%s' "$stdout" | jq -Rsc '{type:"output",text:.}')"
+    if [ "$JSON_OUTPUT" = true ]; then
+      # Parse `goal account list` output into structured JSON.
+      # Each line has the form: [online]  ADDR  BALANCE  microAlgos
+      local json_accounts
+      json_accounts=$(printf '%s\n' "$stdout" | awk '
+        BEGIN { printf "[" ; sep="" }
+        /[A-Z2-7]{58}/ {
+          for (i=1; i<=NF; i++) {
+            if ($i ~ /^[A-Z2-7]{58}$/) { addr=$i }
+            if ($i ~ /^[0-9]+$/ && $(i+1) == "microAlgos") { bal=$i }
+          }
+          printf "%s{\"address\":\"%s\",\"balance\":%s}", sep, addr, bal
+          sep=","
+        }
+        END { printf "]" }
+      ')
+      send_json "$(json_obj --argjson accts "$json_accounts" '{accounts:$accts}')"
+    else
+      send "$(printf '%s' "$stdout" | jq -Rsc '{type:"output",text:.}')"
+    fi
   else
-    send_output "(no accounts found)"
+    if [ "$JSON_OUTPUT" = true ]; then
+      send_json '{"accounts":[]}'
+    else
+      send_output "(no accounts found)"
+    fi
   fi
 }
 
@@ -268,10 +315,10 @@ cmd_help() {
   send_output "Commands:"
   send_output "  start [--json]               Start localnet"
   send_output "  stop [--json]                Stop localnet"
-  send_output "  reset                        Reset to genesis"
+  send_output "  reset [--json]                Reset to genesis"
   send_output "  status [--json]              Show running state"
   send_output "  fund <addr> [--amount N] [--json]  Dispense Algos"
-  send_output "  accounts                     List accounts"
+  send_output "  accounts [--json]             List accounts"
   send_output ""
   send_output "Use --json for machine-readable output."
 }
