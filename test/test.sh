@@ -22,7 +22,7 @@ run_test() {
   # response line (which the plugin reads after sending exec/confirm/load).
   # We capture stdout and grep for the expected substring.
   local input
-  input=$(printf '{"type":"init","version":"fledge-v1","project":{"root":"/tmp/test","name":"t"},"plugin":{"dir":"%s","name":"fledge-plugin-localnet"},"command":"localnet","args":%s}\n%s\n' "$PLUGIN_DIR" "$init_args" "$responses")
+  input=$(printf '{"type":"init","protocol":"fledge-v1","project":{"root":"/tmp/test","name":"t"},"plugin":{"dir":"%s","name":"fledge-plugin-localnet"},"command":"localnet","args":%s}\n%s\n' "$PLUGIN_DIR" "$init_args" "$responses")
 
   local output
   output=$(printf '%s' "$input" | "$BIN" 2>&1 || true)
@@ -123,7 +123,7 @@ run_test_raw() {
 }
 
 run_test_raw "rejects wrong protocol version" \
-  '{"type":"init","version":"fledge-v99","project":{"root":"/tmp/test","name":"t"},"plugin":{"dir":"'"$PLUGIN_DIR"'","name":"fledge-plugin-localnet"},"command":"localnet","args":["help"]}' \
+  '{"type":"init","protocol":"fledge-v99","project":{"root":"/tmp/test","name":"t"},"plugin":{"dir":"'"$PLUGIN_DIR"'","name":"fledge-plugin-localnet"},"command":"localnet","args":["help"]}' \
   '' \
   'Unsupported protocol version'
 

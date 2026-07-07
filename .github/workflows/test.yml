@@ -1,0 +1,31 @@
+name: Test
+on:
+  push:
+    branches: [main]
+    paths:
+      - bin/**
+      - test/**
+      - .github/workflows/test.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - bin/**
+      - test/**
+      - .github/workflows/test.yml
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Syntax-check shell scripts
+        run: |
+          bash -n bin/fledge-localnet
+          bash -n test/test.sh
+      - name: Run protocol test suite
+        run: ./test/test.sh
