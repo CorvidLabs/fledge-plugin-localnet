@@ -2,6 +2,8 @@
 
 Algorand localnet lifecycle plugin for [fledge](https://github.com/CorvidLabs/fledge). Start, stop, reset, and manage a local Algorand network for development.
 
+![spec coverage](https://img.shields.io/endpoint?url=https://corvidlabs.github.io/fledge-plugin-localnet/badges/coverage.json)
+
 ## Install
 
 ```bash
