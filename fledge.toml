@@ -1,0 +1,9 @@
+# fledge.toml — project task definitions
+[tasks]
+syntax = "bash -n bin/fledge-localnet hooks/post-work-start.sh test/test.sh"
+test = "./test/test.sh"
+manifest = "grep -q 'binary = \"bin/fledge-localnet\"' plugin.toml && grep -q 'post_work_start = \"hooks/post-work-start.sh\"' plugin.toml"
+
+[lanes.verify]
+description = "Syntax-check and protocol-test the Algorand localnet plugin"
+steps = ["syntax", "test", "manifest"]

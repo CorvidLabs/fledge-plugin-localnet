@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-localnet-fledge-plugin",
+  "slug": "adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-localnet-fledge-plugin",
+  "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the Localnet Fledge plugin",
+  "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the Localnet Fledge plugin",
+  "kind": "migration",
+  "state": "draft",
+  "base_commit": "671a53b03892751c92addff95d8cfd4212061a55",
+  "created_at": 1783880615,
+  "updated_at": 1783880620,
+  "affected_specs": [
+    "localnet"
+  ],
+  "affected_paths": [
+    "bin/",
+    "hooks/",
+    "test/",
+    "plugin.toml",
+    "fledge.toml",
+    ".github/",
+    ".specsync/",
+    "specs/",
+    ".trust.toml"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "SpecSync strict checks pass at explicit advisory threshold 0 for the extensionless primary executable; existing requirements have deterministic IDs; all four integrations are installed; Trust doctor and verification pass; Bash syntax",
+    "13 protocol tests",
+    "and manifest validation remain green."
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}
