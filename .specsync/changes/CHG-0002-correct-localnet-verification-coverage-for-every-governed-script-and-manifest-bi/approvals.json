@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1783981984,
+      "digest": "a09ce842fdc0e25ab8b3689a8f03e03c986808049594a55396c163553dd76153",
+      "note": "Approved portable definition for Localnet governance-only review corrections"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783982011,
+      "digest": "2d79df12ed19d7dcc262037bc462f5ef0879a2b7fa58c46a9c94ba7f851382c2",
+      "note": "Closing approval after independent syntax, native protocol, structural manifest, and negative verification"
+    }
+  ],
+  "reopenings": []
+}

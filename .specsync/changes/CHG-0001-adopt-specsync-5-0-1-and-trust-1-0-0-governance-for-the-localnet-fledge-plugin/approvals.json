@@ -1,0 +1,63 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1783955347,
+      "digest": "ffed188861b08d5dacd5116f84d7790d29be7d01602e6356015a6fbfa571013e",
+      "note": "Definition approved after current review corrections, exact requirement evidence, and passing native Fledge verification."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783955440,
+      "digest": "20171c5b37a060eb387a4da908363ca9a6584092582f4492ae4bd5c8b1f1ecff",
+      "note": "Closing approval recorded after successful committed-head native verification with exact requirement evidence."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783982014,
+      "digest": "c19088e5f336499d621e0779307f306047293a27bb14cc2ff5aeb4d0546f0ca4",
+      "note": "Fresh closing approval after CHG-0002 native verification; prior canonical delta remains non-replaying"
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-localnet-fledge-plugin",
+      "actor": "user:0xLeif",
+      "reason": "CHG-0002 corrects shared governance verification inputs after review; record fresh evidence without replaying the accepted canonical delta",
+      "timestamp": 1783982011,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "user:0xLeif",
+        "timestamp": 1783955440,
+        "digest": "20171c5b37a060eb387a4da908363ca9a6584092582f4492ae4bd5c8b1f1ecff",
+        "note": "Closing approval recorded after successful committed-head native verification with exact requirement evidence."
+      },
+      "prior_verification": {
+        "timestamp": 1783955375,
+        "commit": "f34577061c520faa907062287648d7509c6c9ee3",
+        "contract_digest": "ffed188861b08d5dacd5116f84d7790d29be7d01602e6356015a6fbfa571013e",
+        "workspace_digest": "1494496b6f3b86d34684273b94e9e5b74b636c7489e81240ff6c850238b9c1e4",
+        "acceptance_input_digest": "de213bf73810ed5927138e45519bc6360dfa5e88ed0152ad08b8a152b08af896",
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-localnet-001"
+        ]
+      },
+      "stale_acceptance_input_digest": "de213bf73810ed5927138e45519bc6360dfa5e88ed0152ad08b8a152b08af896",
+      "current_acceptance_input_digest": "55a8b9aef942cae0389fee4df0adc89eb8fc1f59336a429f783c58855eb44f0b"
+    }
+  ]
+}

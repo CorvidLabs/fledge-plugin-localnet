@@ -1,0 +1,9 @@
+# fledge.toml — project task definitions
+[tasks]
+syntax = "bash -n bin/fledge-localnet && bash -n hooks/post-work-start.sh && bash -n test/test.sh"
+test = "./test/test.sh"
+manifest = "python3 -c 'import pathlib, tomllib; data = tomllib.loads(pathlib.Path(\"plugin.toml\").read_text()); commands = [command for command in data.get(\"commands\", []) if command.get(\"name\") == \"localnet\"]; assert data.get(\"plugin\", {}).get(\"protocol\") == \"fledge-v1\"; assert len(commands) == 1 and commands[0].get(\"binary\") == \"bin/fledge-localnet\"; assert data.get(\"hooks\", {}).get(\"post_work_start\") == \"hooks/post-work-start.sh\"'"
+
+[lanes.verify]
+description = "Syntax-check and protocol-test the Algorand localnet plugin"
+steps = ["syntax", "test", "manifest"]

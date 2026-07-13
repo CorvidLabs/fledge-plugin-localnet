@@ -10,9 +10,20 @@ spec: localnet.spec.md
 
 ## Acceptance Criteria
 
-- All 6 commands work via fledge-v1 protocol
-- post_work_start hook auto-starts localnet for Algorand projects
-- Clear error messages when prerequisites are missing
+### REQ-localnet-001
+
+All six lifecycle and account commands SHALL work through the fledge-v1 protocol.
+
+Acceptance Criteria
+- The protocol harness exercises all six lifecycle and account commands.
+
+### REQ-localnet-002
+
+The post_work_start hook SHALL auto-start localnet only for projects that declare a localnet configuration.
+
+### REQ-localnet-003
+
+Missing prerequisites and invalid addresses or amounts SHALL produce clear errors without a false success.
 
 ## Constraints
 
