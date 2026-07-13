@@ -5,10 +5,10 @@
   "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the Localnet Fledge plugin",
   "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the Localnet Fledge plugin",
   "kind": "migration",
-  "state": "implementing",
+  "state": "accepted",
   "base_commit": "671a53b03892751c92addff95d8cfd4212061a55",
   "created_at": 1783880615,
-  "updated_at": 1783955347,
+  "updated_at": 1783955440,
   "affected_specs": [
     "localnet"
   ],

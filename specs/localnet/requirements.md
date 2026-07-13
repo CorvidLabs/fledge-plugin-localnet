@@ -14,6 +14,9 @@ spec: localnet.spec.md
 
 All six lifecycle and account commands SHALL work through the fledge-v1 protocol.
 
+Acceptance Criteria
+- The protocol harness exercises all six lifecycle and account commands.
+
 ### REQ-localnet-002
 
 The post_work_start hook SHALL auto-start localnet only for projects that declare a localnet configuration.

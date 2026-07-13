@@ -1,6 +1,6 @@
 ---
 id: CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-localnet-fledge-plugin
-state: implementing
+state: accepted
 type: migration
 base_commit: 671a53b03892751c92addff95d8cfd4212061a55
 ---
