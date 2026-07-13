@@ -1,9 +1,9 @@
 {
-  "timestamp": 1783982013,
+  "timestamp": 1783982010,
   "commit": "d98aa85b315c1ea16a96680dc7f5397c85c2eedd",
-  "contract_digest": "ffed188861b08d5dacd5116f84d7790d29be7d01602e6356015a6fbfa571013e",
+  "contract_digest": "a09ce842fdc0e25ab8b3689a8f03e03c986808049594a55396c163553dd76153",
   "workspace_digest": "8a6944335f9b6a0617a4bf01352de0d46a3aca5db6f842b9784fa6756abc04bb",
-  "acceptance_input_digest": "55a8b9aef942cae0389fee4df0adc89eb8fc1f59336a429f783c58855eb44f0b",
+  "acceptance_input_digest": "31c7f8379aa7fe0d43d47f789d60fe5355692f2113bcd6ff153c1b0f19d375f6",
   "passed": true,
   "commands": [
     {
@@ -12,7 +12,5 @@
       "exit_code": 0
     }
   ],
-  "requirement_ids": [
-    "REQ-localnet-001"
-  ]
+  "requirement_ids": []
 }

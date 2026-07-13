@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0002-correct-localnet-verification-coverage-for-every-governed-script-and-manifest-bi",
+  "slug": "correct-localnet-verification-coverage-for-every-governed-script-and-manifest-bi",
+  "title": "Correct Localnet verification coverage for every governed script and manifest binding",
+  "description": "Correct Localnet verification coverage for every governed script and manifest binding",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "d98aa85b315c1ea16a96680dc7f5397c85c2eedd",
+  "created_at": 1783981929,
+  "updated_at": 1783982011,
+  "affected_specs": [],
+  "affected_paths": [
+    "fledge.toml"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This correction strengthens repository verification configuration without changing Localnet plugin runtime behavior or its canonical contract.",
+  "acceptance_criteria": [
+    "The verification lane runs bash syntax checking independently for the command",
+    "hook",
+    "and test scripts; structural TOML validation binds the localnet command and post-work-start hook to their exact files; native tests and strict SpecSync 100% coverage pass"
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
