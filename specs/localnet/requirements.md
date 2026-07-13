@@ -12,15 +12,15 @@ spec: localnet.spec.md
 
 ### REQ-localnet-001
 
-All six lifecycle and account commands work through the fledge-v1 protocol.
+All six lifecycle and account commands SHALL work through the fledge-v1 protocol.
 
 ### REQ-localnet-002
 
-The post_work_start hook auto-starts localnet only for projects that declare a localnet configuration.
+The post_work_start hook SHALL auto-start localnet only for projects that declare a localnet configuration.
 
 ### REQ-localnet-003
 
-Missing prerequisites and invalid addresses or amounts produce clear errors without a false success.
+Missing prerequisites and invalid addresses or amounts SHALL produce clear errors without a false success.
 
 ## Constraints
 
