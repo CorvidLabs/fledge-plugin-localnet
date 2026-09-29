@@ -1,6 +1,6 @@
 ---
 id: CHG-0002-correct-localnet-verification-coverage-for-every-governed-script-and-manifest-bi
-state: accepted
+state: archived
 type: bug_fix
 base_commit: d98aa85b315c1ea16a96680dc7f5397c85c2eedd
 ---
